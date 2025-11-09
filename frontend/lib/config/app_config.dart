@@ -3,11 +3,11 @@ class AppConfig {
   // Change this based on your environment:
   
   // For Android Emulator
-  static const String androidEmulatorBackend = 'http://10.76.239.235:8080';
+  static const String androidEmulatorBackend = 'http://ec2-98-89-34-0.compute-1.amazonaws.com:8080';
   
   // For iOS Simulator
-  static const String iosSimulatorBackend = 'http://10.76.239.235:8080';
-  
+  static const String iosSimulatorBackend = 'http://ec2-98-89-34-0.compute-1.amazonaws.com:8080';
+
   // For Physical Device (replace with your computer's IP)
   static const String physicalDeviceBackend = 'http://10.76.239.235:8080';
   
@@ -19,12 +19,12 @@ class AppConfig {
   
   // ML Pricing API Configuration
   // For Android Emulator
-  static const String androidEmulatorPricingApi = 'http://10.0.2.2:5000';
-  static const String androidEmulatorAvailabilityApi = 'http://10.76.239.235:5001';
+  static const String androidEmulatorPricingApi = 'http://ec2-98-89-34-0.compute-1.amazonaws.com:5000';
+  static const String androidEmulatorAvailabilityApi = 'http://ec2-98-89-34-0.compute-1.amazonaws.com:5001';
 
   
   // For iOS Simulator
-  static const String iosSimulatorPricingApi = 'http://localhost:5000';
+  static const String iosSimulatorPricingApi = 'http://ec2-98-89-34-0.compute-1.amazonaws.com:5000';
   
   // For Physical Device (replace with your computer's IP)
   static const String physicalDevicePricingApi = 'http://10.76.239.235:5000';
@@ -33,7 +33,7 @@ class AppConfig {
   static const String pricingApiUrl = androidEmulatorPricingApi;
   
   // Google Maps Configuration
-  static const String googleMapsApiKey = 'AIzaSyA4L8tGKjp2XZXks2VghgWWDFOhERwrAzs';
+  static const String googleMapsApiKey = 'AIzaSyBA2HB04nzGpbh-HC1WON7cT8F9xgQGEBM';
   
   // H3 Configuration
   static const int defaultResolution = 9;  // ~700m hexagons

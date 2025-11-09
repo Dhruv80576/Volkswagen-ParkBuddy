@@ -13,7 +13,7 @@ class GooglePlacesService {
   /// 
   /// Example: searchPlaces("Bandra West Mumbai")
   Future<List<PlaceSearchResult>> searchPlaces(String query) async {
-    if (_apiKey == 'YOUR_GOOGLE_PLACES_API_KEY') {
+    if (_apiKey == 'AIzaSyBA2HB04nzGpbh-HC1WON7cT8F9xgQGEBM') {
       print('⚠️ Google Places API key not configured');
       return _getMockPlaces(query);
     }
@@ -57,7 +57,7 @@ class GooglePlacesService {
     String? type,
     String? keyword,
   }) async {
-    if (_apiKey == 'YOUR_GOOGLE_PLACES_API_KEY') {
+    if (_apiKey == 'AIzaSyBA2HB04nzGpbh-HC1WON7cT8F9xgQGEBM') {
       print('⚠️ Google Places API key not configured');
       return _getMockNearbyPlaces(latitude, longitude);
     }
@@ -102,7 +102,7 @@ class GooglePlacesService {
 
   /// Get place details by place ID
   Future<PlaceSearchResult?> getPlaceDetails(String placeId) async {
-    if (_apiKey == 'YOUR_GOOGLE_PLACES_API_KEY') {
+    if (_apiKey == 'AIzaSyBA2HB04nzGpbh-HC1WON7cT8F9xgQGEBM') {
       print('⚠️ Google Places API key not configured');
       return null;
     }
@@ -140,7 +140,7 @@ class GooglePlacesService {
     double? longitude,
     int radius = 50000, // 50km
   }) async {
-    if (_apiKey == 'YOUR_GOOGLE_PLACES_API_KEY') {
+    if (_apiKey == 'AIzaSyBA2HB04nzGpbh-HC1WON7cT8F9xgQGEBM') {
       print('⚠️ Google Places API key not configured');
       return _getMockAutocomplete(input);
     }

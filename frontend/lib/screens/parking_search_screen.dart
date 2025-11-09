@@ -3,12 +3,15 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:async';
+import 'dart:math' as math;
 import '../services/parking_service.dart';
 import '../services/route_service.dart';
 import '../models/parking_model.dart';
 import '../models/route_model.dart';
 import '../widgets/parking_bottom_sheet.dart';
 import '../widgets/search_filters_sheet.dart';
+import '../widgets/search_animation_overlay.dart';
+import '../widgets/data_processing_panel.dart';
 import 'booking_screen.dart';
 
 class ParkingSearchScreen extends StatefulWidget {
@@ -34,9 +37,11 @@ class _ParkingSearchScreenState extends State<ParkingSearchScreen>
   final Set<Marker> _markers = {};
   final Set<Polyline> _polylines = {};
   final Set<Circle> _circles = {};
+  final Set<Polygon> _polygons = {};
 
   bool _isSearching = false;
   bool _isLoadingRoute = false;
+  List<Map<String, dynamic>> _searchHexagons = [];
 
   // Search filters
   double _maxDistance = 5.0;
@@ -150,9 +155,16 @@ class _ParkingSearchScreenState extends State<ParkingSearchScreen>
     setState(() {
       _isSearching = true;
       _selectedMatch = null;
+      _polygons.clear();
     });
 
     _animationController.forward();
+
+    // Create search hexagons around current location
+    _createSearchHexagons();
+
+    // Animate hexagons being scanned
+    await _animateHexagonSearch();
 
     try {
       print("latitude: ${_currentPosition!.latitude}" + "longitude: ${_currentPosition!.longitude}");
@@ -167,9 +179,12 @@ class _ParkingSearchScreenState extends State<ParkingSearchScreen>
         priority: 1.0,
       );
 
-      await Future.delayed(const Duration(milliseconds: 800)); // Smooth UX
+      await Future.delayed(const Duration(milliseconds: 500)); // Smooth UX
 
       if (match != null && mounted) {
+        // Highlight the found parking hexagon
+        await _highlightFoundParking(match);
+
         setState(() {
           _selectedMatch = match;
           _addParkingMarker(match);
@@ -189,11 +204,150 @@ class _ParkingSearchScreenState extends State<ParkingSearchScreen>
     } catch (e) {
       _showSnackBar('Search failed: $e', isError: true);
     } finally {
+      // Clear search hexagons after delay
+      await Future.delayed(const Duration(milliseconds: 1000));
       setState(() {
         _isSearching = false;
+        _polygons.clear();
+        _searchHexagons.clear();
       });
       _animationController.reverse();
     }
+  }
+
+  void _createSearchHexagons() {
+    if (_currentPosition == null) return;
+
+    final center = LatLng(_currentPosition!.latitude, _currentPosition!.longitude);
+    final hexagonSize = 0.005; // Approximate degrees for hexagon size
+    _searchHexagons.clear();
+
+    // Create hexagon grid around current position
+    for (int row = -3; row <= 3; row++) {
+      for (int col = -3; col <= 3; col++) {
+        final offsetX = col * hexagonSize * 1.5;
+        final offsetY = row * hexagonSize * math.sqrt(3) + 
+                        (col.isOdd ? hexagonSize * math.sqrt(3) / 2 : 0);
+
+        final hexCenter = LatLng(
+          center.latitude + offsetY,
+          center.longitude + offsetX,
+        );
+
+        _searchHexagons.add({
+          'center': hexCenter,
+          'scanned': false,
+          'found': false,
+        });
+      }
+    }
+  }
+
+  Future<void> _animateHexagonSearch() async {
+    // Animate scanning each hexagon
+    for (int i = 0; i < _searchHexagons.length; i++) {
+      if (!mounted || !_isSearching) break;
+
+      setState(() {
+        _searchHexagons[i]['scanned'] = true;
+        _addHexagonPolygon(
+          _searchHexagons[i]['center'],
+          'search_hex_$i',
+          Colors.blue.withOpacity(0.2),
+          Colors.blue.withOpacity(0.5),
+        );
+      });
+
+      // Stagger the animation
+      await Future.delayed(const Duration(milliseconds: 80));
+    }
+  }
+
+  Future<void> _highlightFoundParking(ParkingMatch match) async {
+    // Find nearest hexagon to parking location
+    final parkingLocation = LatLng(
+      match.parkingSlot.latitude,
+      match.parkingSlot.longitude,
+    );
+
+    int nearestIndex = -1;
+    double minDistance = double.infinity;
+
+    for (int i = 0; i < _searchHexagons.length; i++) {
+      final hexCenter = _searchHexagons[i]['center'] as LatLng;
+      final distance = _calculateDistance(hexCenter, parkingLocation);
+      
+      if (distance < minDistance) {
+        minDistance = distance;
+        nearestIndex = i;
+      }
+    }
+
+    if (nearestIndex != -1) {
+      // Highlight the found hexagon
+      setState(() {
+        _searchHexagons[nearestIndex]['found'] = true;
+        _polygons.clear();
+        
+        // Add green highlight hexagon
+        _addHexagonPolygon(
+          _searchHexagons[nearestIndex]['center'],
+          'found_hex',
+          Colors.green.withOpacity(0.3),
+          Colors.greenAccent.withOpacity(0.8),
+        );
+      });
+
+      // Pulse animation
+      for (int i = 0; i < 3; i++) {
+        await Future.delayed(const Duration(milliseconds: 200));
+        if (!mounted) break;
+        
+        setState(() {
+          _polygons.clear();
+          _addHexagonPolygon(
+            _searchHexagons[nearestIndex]['center'],
+            'found_hex',
+            Colors.green.withOpacity(0.1 + (i % 2) * 0.2),
+            Colors.greenAccent.withOpacity(0.5 + (i % 2) * 0.3),
+          );
+        });
+      }
+    }
+  }
+
+  void _addHexagonPolygon(
+    LatLng center,
+    String id,
+    Color fillColor,
+    Color strokeColor,
+  ) {
+    final hexagonSize = 0.003;
+    final points = <LatLng>[];
+
+    for (int i = 0; i < 6; i++) {
+      final angle = (math.pi / 3) * i;
+      final lat = center.latitude + hexagonSize * math.cos(angle);
+      final lng = center.longitude + hexagonSize * math.sin(angle);
+      points.add(LatLng(lat, lng));
+    }
+
+    _polygons.add(
+      Polygon(
+        polygonId: PolygonId(id),
+        points: points,
+        fillColor: fillColor,
+        strokeColor: strokeColor,
+        strokeWidth: 2,
+      ),
+    );
+  }
+
+  double _calculateDistance(LatLng point1, LatLng point2) {
+    return math.sqrt(
+      math.pow(point1.latitude - point2.latitude, 2) +
+      math.pow(point1.longitude - point2.longitude, 2),
+    );
   }
 
   void _addParkingMarker(ParkingMatch match) {
@@ -1061,6 +1215,7 @@ class _ParkingSearchScreenState extends State<ParkingSearchScreen>
             markers: _markers,
             polylines: _polylines,
             circles: _circles,
+            polygons: _polygons,
             onMapCreated: (controller) {
               _mapController = controller;
             },
@@ -1637,6 +1792,19 @@ class _ParkingSearchScreenState extends State<ParkingSearchScreen>
                 ),
               ),
             ),
+          ),
+
+          // Search Animation Overlay
+          SearchAnimationOverlay(
+            isSearching: _isSearching,
+            onComplete: () {
+              // Animation complete callback
+            },
+          ),
+
+          // Data Processing Panel
+          DataProcessingPanel(
+            isProcessing: _isSearching,
           ),
         ],
       ),
