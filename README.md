@@ -178,14 +178,6 @@ Prototype_app/
 │   ├── QUICKSTART.md                 # Quick start guide
 │   └── SOLUTION_OVERVIEW.md          # Detailed solution overview
 │
-├── landing_website/                  # Marketing Website
-│   ├── index.html                    # Main landing page
-│   ├── styles.css                    # Styling
-│   ├── script.js                     # Interactivity
-│   ├── images/                       # Assets
-│   ├── video/                        # Demo videos
-│   └── README.md                     # Website documentation
-│
 ├── ARCHITECTURE_DIAGRAMS.md          # Visual architecture guide
 └── README.md                         # This file
 ```
@@ -339,7 +331,6 @@ Once all services are running:
 | **Backend API** | http://localhost:8080 | Main Go server |
 | **ML Pricing API** | http://localhost:5000 | Dynamic pricing service |
 | **Availability API** | http://localhost:5001 | Availability prediction |
-| **Landing Website** | Open `landing_website/index.html` | Marketing website |
 | **Flutter App** | Mobile/Emulator | Mobile application |
 
 ### Health Check
@@ -647,7 +638,6 @@ flutter run
 - [ML Quick Start](ml_pricing/QUICKSTART.md) - Fast ML setup guide
 - [ML Solution Overview](ml_pricing/SOLUTION_OVERVIEW.md) - Detailed ML explanation
 - [Bipartite Matching](backend/BIPARTITE_MATCHING_README.md) - Matching algorithm
-- [Landing Website](landing_website/README.md) - Website documentation
 
 ---
 
